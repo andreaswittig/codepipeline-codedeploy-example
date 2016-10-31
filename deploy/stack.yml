@@ -243,7 +243,7 @@ Resources:
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash -x
-          yum update && yum install -y ruby wget && wget https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install && chmod +x ./install && ./install auto && service codedeploy-agent start
+          yum update -y && yum install -y ruby wget && wget https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install && chmod +x ./install && ./install auto && service codedeploy-agent start
           /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2Instance
       SubnetId: !Ref Subnet
       Tags:

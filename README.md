@@ -25,3 +25,5 @@ The script will ask you for:
 * GitHub repository
 * GitHub owner (username of individual or organisation)
 * GitHub [OAuth Token with access to Repo](https://github.com/settings/tokens).
+
+It might take a few minutes until the CodePipeline job has finished and the EC2 Instance is able to answer your HTTP request.
