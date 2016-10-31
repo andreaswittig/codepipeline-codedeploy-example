@@ -164,6 +164,17 @@ Resources:
             Configuration:
               ApplicationName: !Ref Application
               DeploymentGroupName: !Ref DeploymentGroup
+        - Name: Test
+          Actions:
+          - Name: Test
+            ActionTypeId:
+              Category: Invoke 
+              Owner: AWS 
+              Version: 1 
+              Provider: Lambda
+            Configuration:
+              FunctionName: !Ref TestLambda
+              UserParameters: !Sub 'http://${EC2Instance.PublicDnsName}'
   CodeDeployIAMRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -231,12 +242,8 @@ Resources:
       - !Ref SecurityGroup
       UserData:
         'Fn::Base64': !Sub |
-          #!/bin/bash -ex
-          yum update && yum install -y ruby wget
-          wget https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install
-          chmod +x ./install
-          ./install auto
-          service codedeploy-agent start
+          #!/bin/bash -x
+          yum update && yum install -y ruby wget && wget https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install && chmod +x ./install && ./install auto && service codedeploy-agent start
           /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2Instance
       SubnetId: !Ref Subnet
       Tags:
@@ -248,6 +255,43 @@ Resources:
       ResourceSignal:
         Count: 1
         Timeout: PT10M
+  LambdaIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - 'lambda.amazonaws.com'
+          Action:
+          - 'sts:AssumeRole'
+      Path: '/'
+      ManagedPolicyArns:
+      - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+      - PolicyName: codepipeline
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - codepipeline:PutJobFailureResult
+            - codepipeline:PutJobSuccessResult
+            Resource: "*"
+            Effect: Allow
+  TestLambda:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Code:
+        S3Bucket: 'codepipeline-codedeploy-example-lambda'
+        S3Key: 'v2.zip'
+      FunctionName: 'codepipeline_http_test'
+      Handler: 'index.handler'
+      MemorySize: 128
+      Role: !Sub '${LambdaIAMRole.Arn}'
+      Runtime: 'nodejs4.3'
+      Timeout: 30
 Outputs:
   URL:
     Description: 'The URL pointing to the static website.'
