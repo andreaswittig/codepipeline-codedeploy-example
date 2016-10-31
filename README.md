@@ -15,6 +15,8 @@ The following AWS services are used to create a Continuous Delivery pipeline.
 
 ## Setup
 
+Fork this repository.
+
 Use the `./setup.sh` script to create a Continuous Delivery pipeline.
 
 Note: The script will create a CloudFormation stack which launches an EC2 instance into the default VPC of your default region. 
